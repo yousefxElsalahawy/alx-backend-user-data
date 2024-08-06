@@ -19,7 +19,7 @@ class BasicAuth(Auth):
             return None
         if not authorization_header.startswith('Basic '):
             return None
-        return authorization_header.split(' ')[1]
+        return authorization_header.split(' ')[-1]
 
     def decode_base64_authorization_header(self, base64_authorization_header: str) -> str:
         """Decodes the Base64 Authorization header."""
@@ -28,8 +28,8 @@ class BasicAuth(Auth):
         if not isinstance(base64_authorization_header, str):
             return None
         try:
-            decoded = base64.b64decode(base64_authorization_header).decode('utf-8')
-            return decoded
+            decoded_bytes = base64.b64decode(base64_authorization_header)
+            return decoded_bytes.decode('utf-8')
         except Exception:
             return None
 
@@ -39,12 +39,10 @@ class BasicAuth(Auth):
             return (None, None)
         if not isinstance(decoded_base64_authorization_header, str):
             return (None, None)
-
-        # Split only at the first occurrence of ':'
-        split_index = decoded_base64_authorization_header.find(':')
-        if split_index == -1:
+        if ':' not in decoded_base64_authorization_header:
             return (None, None)
 
+        split_index = decoded_base64_authorization_header.find(':')
         email = decoded_base64_authorization_header[:split_index]
         password = decoded_base64_authorization_header[split_index + 1:]
         return (email, password)
