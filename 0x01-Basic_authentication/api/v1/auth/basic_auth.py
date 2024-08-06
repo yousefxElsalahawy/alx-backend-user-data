@@ -3,28 +3,17 @@
 Module for authentication using Basic auth
 """
 
-
 from typing import TypeVar
 from api.v1.auth.auth import Auth
 import base64
 
 from models.user import User
 
-
 class BasicAuth(Auth):
-    """_summary_
-    """
-
-    def extract_base64_authorization_header(self,
-                                            authorization_header: str) -> str:
-        """_summary_
-
-        Args:
-                 authorization_header (str): _description_
-
-        Returns:
-                 str: _description_
-        """
+    """Class for Basic Authentication"""
+    
+    def extract_base64_authorization_header(self, authorization_header: str) -> str:
+        """Extracts the Base64 part of the Authorization header."""
         if authorization_header is None:
             return None
         if not isinstance(authorization_header, str):
@@ -35,16 +24,8 @@ class BasicAuth(Auth):
         token = authorization_header.split(' ')[-1]
         return token
 
-    def decode_base64_authorization_header(
-            self, base64_authorization_header: str) -> str:
-        """_summary_
-
-        Args:
-                 base64_authorization_header (str): _description_
-
-        Returns:
-                  str: _description_
-        """
+    def decode_base64_authorization_header(self, base64_authorization_header: str) -> str:
+        """Decodes the Base64 Authorization header."""
         if base64_authorization_header is None:
             return None
         if not isinstance(base64_authorization_header, str):
@@ -57,31 +38,25 @@ class BasicAuth(Auth):
         except Exception:
             return None
 
-    def extract_user_credentials(
-            self, decoded_base64_authorization_header: str) -> (str, str):
-        """_summary_
-
-        Args:
-                                        self (_type_): _description_
-                                        str (_type_): _description_
-        """
+    def extract_user_credentials(self, decoded_base64_authorization_header: str) -> (str, str):
+        """Extracts user credentials from the decoded Base64 Authorization header."""
         if decoded_base64_authorization_header is None:
             return (None, None)
         if not isinstance(decoded_base64_authorization_header, str):
             return (None, None)
-        if ':' not in decoded_base64_authorization_header:
+
+        # Split only at the first occurrence of ':'
+        split_index = decoded_base64_authorization_header.find(':')
+        if split_index == -1:
             return (None, None)
 
-        email, password = decoded_base64_authorization_header.split(':')
+        email = decoded_base64_authorization_header[:split_index]
+        password = decoded_base64_authorization_header[split_index + 1:]
+
         return (email, password)
 
-    def user_object_from_credentials(
-            self, user_email: str, user_pwd: str) -> TypeVar('User'):
-        """_summary_
-
-        Args:
-                        self (_type_): _description_
-        """
+    def user_object_from_credentials(self, user_email: str, user_pwd: str) -> TypeVar('User'):
+        """Returns the User instance based on email and password."""
         if user_email is None or not isinstance(user_email, str):
             return None
         if user_pwd is None or not isinstance(user_pwd, str):
@@ -99,8 +74,7 @@ class BasicAuth(Auth):
             return None
 
     def current_user(self, request=None) -> TypeVar('User'):
-        """_summary_
-        """
+        """Returns the current User instance based on request."""
         auth_header = self.authorization_header(request)
         if auth_header is not None:
             token = self.extract_base64_authorization_header(auth_header)
@@ -109,7 +83,6 @@ class BasicAuth(Auth):
                 if decoded is not None:
                     email, password = self.extract_user_credentials(decoded)
                     if email is not None:
-                        return self.user_object_from_credentials(
-                            email, password)
+                        return self.user_object_from_credentials(email, password)
 
-        return
+        return None
